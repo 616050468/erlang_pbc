@@ -1,0 +1,38 @@
+package msg;
+
+message attriMessage {
+	optional int32 index = 1;
+	optional int32 value = 2;
+}
+
+message shortMessage {
+	optional int32 not_used = 1;
+}
+message longMessage {
+	optional int64 dbID = 1;
+	optional int32 sceneID = 2;
+	optional int32 sceneLine = 3;
+	optional int32 x = 4;
+	optional int32 y = 5;
+	optional int32 z = 6;
+	repeated attriMessage attriList = 7;
+	optional string name = 8;
+	optional int32 career = 9;
+	optional bool sex = 10;
+	optional string signature = 11;
+	optional int32 vip_level = 12;
+	optional string telphone = 13;
+}
+
+message bigmessageMessage {
+	repeated longMessage list = 1;
+}
+
+message nested_msgMessage {
+	optional bigmessageMessage data = 1;
+}
+
+message nested_msg1Message {
+	optional nested_msgMessage data1 = 1;
+	optional bigmessageMessage data2 = 2;
+}

@@ -1,0 +1,1 @@
+cmd /c start werl +K true +P 102400 -smp auto -pa ebin
