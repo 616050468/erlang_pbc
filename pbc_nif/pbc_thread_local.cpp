@@ -15,11 +15,12 @@ int init_thread_local()
 void set_pbc_env(struct pbc_env* ppbc_env)
 {
     TlsSetValue(dwTlsIndex, ppbc_env);
+    return;
 }
 
 struct pbc_env* get_pbc_env()
 {
-    TlsGetValue(dwTlsIndex);
+   return TlsGetValue(dwTlsIndex);
 }
 
 #else
