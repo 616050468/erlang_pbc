@@ -15,6 +15,7 @@
     <ClCompile Include="pbc_nif_decoder.c" />
     <ClCompile Include="pbc_nif_encoder.c" />
     <ClCompile Include="pbc_nif.c" />
+    <ClCompile Include="pbc_thread_local.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\pbc.h" />

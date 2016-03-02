@@ -27,6 +27,9 @@
     <ClCompile Include="pbc_nif_decoder.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="pbc_thread_local.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\pbc.h">
