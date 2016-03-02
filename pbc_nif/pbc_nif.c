@@ -3,7 +3,8 @@
 #include <string.h>
 #include <assert.h>
 
-__declspec(thread) static struct pbc_env* ppbc_env = NULL;
+//__declspec(thread) static struct pbc_env* ppbc_env = NULL;
+//static struct pbc_env* ppbc_env = NULL;
 FILE* file;
 ERL_NIF_TERM default_records = 0;
 ERL_NIF_TERM default_maps = 0;
@@ -31,11 +32,13 @@ static ErlNifFunc nif_funcs[] =
 
 ERL_NIF_TERM nif_register(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
+    struct pbc_env* ppbc_env = get_pbc_env();
 	if (ppbc_env != NULL)
 	{
 		return ATOM_OK;
 	}
 	ppbc_env = pbc_new();
+    set_pbc_env(ppbc_env);
 	char name[100];
 	enif_get_string(env, argv[0], name, sizeof(name), ERL_NIF_LATIN1);
 	struct pbc_slice slice;
@@ -48,6 +51,7 @@ ERL_NIF_TERM nif_register(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 
 ERL_NIF_TERM nif_encode(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
+    struct pbc_env* ppbc_env = get_pbc_env();
 	if (ppbc_env == NULL)
 	{
 		return ATOM_ERROR;
@@ -76,6 +80,7 @@ ERL_NIF_TERM nif_encode(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 
 ERL_NIF_TERM nif_decode(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
+    struct pbc_env* ppbc_env = get_pbc_env();
 	if (ppbc_env == NULL)
 	{
 		return ATOM_ERROR;
@@ -129,11 +134,6 @@ void read_file(const char *filename, struct pbc_slice *slice) {
 	fclose(f);
 }
 
-void* get_pbc_env()
-{
-	return ppbc_env;
-}
-
 static int on_load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info)
 {
 	ErlNifEnv *env_priv = enif_alloc_env();
@@ -144,6 +144,7 @@ static int on_load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info)
 	ATOM_FALSE = enif_make_atom(env, "false");
 	ATOM_UNDEFINED = enif_make_atom(env, "undefined");
 	file = fopen("pbc_nif_log.txt", "w+");
+    init_thread_local();
 	return 0;
 }
 

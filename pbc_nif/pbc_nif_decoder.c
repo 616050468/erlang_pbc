@@ -128,7 +128,7 @@ int decode_message(ErlNifEnv* env, const char* type_name, struct pbc_slice* slic
 	if (decode_type == decode_type_record && get_default_record(enif_priv_data(env), type_name, &term))
 	{
 		ERL_NIF_TERM record = enif_make_copy(env, term);
-		enif_get_tuple(env, record, &user_data.arity, &user_data.array);
+		enif_get_tuple(env, record, &user_data.arity, (const ERL_NIF_TERM **)&user_data.array);
 		ret = pbc_decode(get_pbc_env(), type_name, slice, decode_cb, &user_data);
 		*result = enif_make_tuple_from_array(env, user_data.array, user_data.arity);
 	}
@@ -145,19 +145,20 @@ int make_default_term(ErlNifEnv* env, struct _message* m, ERL_NIF_TERM* default_
 {
 	ERL_NIF_TERM key_term1, key_term2, record, map, map1;
 	ERL_NIF_TERM* array;
+    int i;
 	int array_size;
 	int field_count = pbc_erl_field_count(m);
 	//fprintf(file, "make_default_term, type_name: %s, field_count: %d\n", m->key, field_count);
 	//fflush(file);
 	array_size = field_count + 1;
 	array = enif_alloc(sizeof(ERL_NIF_TERM)* array_size);
-	for (int i = 0; i < array_size; i++)
+	for (i = 0; i < array_size; i++)
 	{
 		array[i] = ATOM_UNDEFINED;
 	}
 	array[0] = enif_make_atom(env, m->key);
 	map = enif_make_new_map(env);
-	for (int i = 1; i < array_size; i++)
+	for (i = 1; i < array_size; i++)
 	{
 		const char *key = NULL;
 		const char *type_name = NULL;

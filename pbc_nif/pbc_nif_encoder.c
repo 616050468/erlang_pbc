@@ -195,15 +195,15 @@ int write_field(ErlNifEnv* env, void *wmsg, struct _message *m, const char *key,
 
 int encode_message(ErlNifEnv* env, void *wmsg, const char *type_name, ERL_NIF_TERM value)
 {
-	int len;
-	const ERL_NIF_TERM *array;
+	int len, i;
+    const ERL_NIF_TERM *array;
 	struct _message *m = _pbcP_get_message(get_pbc_env(), type_name);
 	int ret;
 	if (enif_get_tuple(env, value, &len, &array))
 	{
 // 		fprintf(file, "encode_record, name: %s, size: %d\n", type_name, len);
 // 		fflush(file);
-		for (int i = 1; i < len; ++i)
+		for (i = 1; i < len; ++i)
 		{
 			if (enif_compare(value, ATOM_UNDEFINED) == 0)
 				continue;

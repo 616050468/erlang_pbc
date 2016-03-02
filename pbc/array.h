@@ -3,7 +3,7 @@
 
 #include "varint.h"
 #include "pbc.h"
-//#include "alloc.h"
+#include "alloc.h"
 
 typedef union _pbc_var {
 	struct longlong integer;

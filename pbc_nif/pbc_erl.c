@@ -1,5 +1,5 @@
-#include "pbc_erl.h"
 #include "proto.h"
+#include "pbc_erl.h"
 int
 pbc_erl_pbc_type_ip(struct _message *m, int id, const char **key, const char ** type) {
 	if (m == NULL) {
