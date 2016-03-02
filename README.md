@@ -53,9 +53,10 @@ Eshell V6.1  (abort with ^G)
 please see test_msg.erl to know more....
 
 test data in personal note-book:
-Intel(R) Xeon(R) CPU E3-1231 v3 @3.40GHz
-RAM:  8.00GB
-OS TYPE: 64-bit
+
+    Intel(R) Xeon(R) CPU E3-1231 v3 @3.40GHz
+    RAM:  8.00GB
+    OS TYPE: 64-bit
 
 ```C
 Eshell V6.1  (abort with ^G)
