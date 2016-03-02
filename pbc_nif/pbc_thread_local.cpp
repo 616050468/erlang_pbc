@@ -20,7 +20,7 @@ void set_pbc_env(struct pbc_env* ppbc_env)
 
 struct pbc_env* get_pbc_env()
 {
-   return TlsGetValue(dwTlsIndex);
+   return (struct pbc_env*)TlsGetValue(dwTlsIndex);
 }
 
 #else
