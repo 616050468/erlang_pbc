@@ -21,13 +21,15 @@ ERL_NIF_TERM nif_register(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM nif_encode(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM nif_decode(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 ERL_NIF_TERM nif_get_default(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM nif_all_default(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
 
 static ErlNifFunc nif_funcs[] =
 {
 	{ "register", 1, nif_register },
 	{ "encode",  2, nif_encode },
 	{ "decode", 3, nif_decode },
-	{ "get_default", 1, nif_get_default },
+	{ "get_default", 2, nif_get_default },
+	{ "all_default", 1, nif_all_default },
 };
 
 ERL_NIF_TERM nif_register(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
@@ -109,13 +111,35 @@ ERL_NIF_TERM nif_decode(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 ERL_NIF_TERM nif_get_default(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
 	char type_name[100];
-	ERL_NIF_TERM record = ATOM_UNDEFINED;
-	ERL_NIF_TERM map = ATOM_UNDEFINED;
+	ERL_NIF_TERM term = ATOM_UNDEFINED;
 	type_name[99] = '\0';
+	int decode_type = decode_type_record;
 	enif_get_string(env, argv[0], type_name, sizeof(type_name), ERL_NIF_LATIN1);
-	get_default_record(enif_priv_data(env), type_name, &record);
- 	get_default_map(enif_priv_data(env), type_name, &map);
- 	return enif_make_tuple2(env, enif_make_copy(env, record), enif_make_copy(env, map));
+	enif_get_int(env, argv[1], &decode_type);
+	if (decode_type == decode_type_record)
+	{
+		get_default_record(enif_priv_data(env), type_name, &term);
+	}
+	else if (decode_type == decode_type_map)
+	{
+		get_default_map(enif_priv_data(env), type_name, &term);
+	}
+ 	return enif_make_copy(env, term);
+}
+
+ERL_NIF_TERM nif_all_default(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+{
+	int decode_type = decode_type_record;
+	enif_get_int(env, argv[0], &decode_type);
+	if (decode_type == decode_type_record)
+	{
+		return enif_make_copy(env, default_records);
+	}
+	else if (decode_type == decode_type_map)
+	{
+		return enif_make_copy(env, default_maps);
+	}
+	return ATOM_UNDEFINED;
 }
 
 void read_file(const char *filename, struct pbc_slice *slice) {

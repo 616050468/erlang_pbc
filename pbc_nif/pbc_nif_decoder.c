@@ -2,6 +2,7 @@
 #include "pbc_erl.h"
 #include "proto.h"
 #include <stdlib.h>
+#include <string.h>
 
 extern FILE* file;
 extern ERL_NIF_TERM default_records;
@@ -148,8 +149,8 @@ int make_default_term(ErlNifEnv* env, struct _message* m, ERL_NIF_TERM* default_
     int i;
 	int array_size;
 	int field_count = pbc_erl_field_count(m);
-	//fprintf(file, "make_default_term, type_name: %s, field_count: %d\n", m->key, field_count);
-	//fflush(file);
+// 	fprintf(file, "make_default_term, type_name: %s, field_count: %d\n", m->key, field_count);
+// 	fflush(file);
 	array_size = field_count + 1;
 	array = enif_alloc(sizeof(ERL_NIF_TERM)* array_size);
 	for (i = 0; i < array_size; i++)
@@ -210,6 +211,7 @@ void iterator_msgs_cb(void *p, void *ud)
 	ERL_NIF_TERM key;
 	ERL_NIF_TERM record;
 	ERL_NIF_TERM map;
+	if (strstr(m->key, "google.protobuf")) return;
 	if (!get_default_record(env, m->key, &record))
 	{
 		make_default_term(env, m, &record, &map);

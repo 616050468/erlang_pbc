@@ -16,5 +16,10 @@ encode(MsgType, Term) ->
 decode(MsgType, Bin, Type) ->
     erlang:nif_error({error, not_loaded}).
 
-get_default(MsgType) ->
+%% Type 0: record, 1: map
+get_default(MsgType, Type) ->
+    erlang:nif_error({error, not_loaded}).
+
+%% Type 0: record, 1: map
+all_default(Type) ->
     erlang:nif_error({error, not_loaded}).
