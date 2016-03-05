@@ -74,7 +74,7 @@ int _read(ErlNifEnv* env, int pbc_type, const char *type_name, union pbc_value *
 	return 0;
 }
 
-void decode_cb(void *ud, int pbc_type, const char * type_name, union pbc_value *v, int id, const char *key)
+void decode_cb(void *ud, int pbc_type, const char * type_name, union pbc_value *v, int id, int index, const char *key)
 {
 	struct decode_env* user_data = (struct decode_env*)ud;
 	ErlNifEnv* env = user_data->env;
@@ -82,15 +82,16 @@ void decode_cb(void *ud, int pbc_type, const char * type_name, union pbc_value *
 	ERL_NIF_TERM key_term;
 	ERL_NIF_TERM value;
 	if (key == NULL || pbc_type == PBC_NOEXIST) return;
+
 	if (pbc_type & PBC_REPEATED)
 	{
 		ERL_NIF_TERM cell;
 		_read(env, pbc_type & ~PBC_REPEATED, type_name, v, &cell, decode_type);
 		if (decode_type == decode_type_record)
 		{
-			if (enif_is_list(env, user_data->array[id]))
+			if (enif_is_list(env, user_data->array[index]))
 			{
-				user_data->array[id] = enif_make_list_cell(env, cell, user_data->array[id]);
+				user_data->array[index] = enif_make_list_cell(env, cell, user_data->array[index]);
 			}
 		}
 		else
@@ -108,7 +109,7 @@ void decode_cb(void *ud, int pbc_type, const char * type_name, union pbc_value *
 	{
 		if (decode_type == decode_type_record)
 		{
-			_read(env, pbc_type, type_name, v, &user_data->array[id], decode_type);
+			_read(env, pbc_type, type_name, v, &user_data->array[index], decode_type);
 		}
 		else
 		{
@@ -142,65 +143,92 @@ int decode_message(ErlNifEnv* env, const char* type_name, struct pbc_slice* slic
 	return ret;
 }
 
-int make_default_term(ErlNifEnv* env, struct _message* m, ERL_NIF_TERM* default_record, ERL_NIF_TERM* default_map)
+/*
+//              make default  term 
+*/
+int make_default_term(ErlNifEnv* env, struct _message* m, ERL_NIF_TERM* default_record, ERL_NIF_TERM* default_map);
+
+void iterator_msg_field_cb(void *p, void *ud)
 {
 	ERL_NIF_TERM key_term1, key_term2, record, map, map1;
 	ERL_NIF_TERM* array;
+	ErlNifEnv* env;
+	struct decode_env* user_data;
+	struct _field *f;
+	const char *type_name = NULL;
+	int pbc_type;
+
+	user_data = (struct decode_env*)ud;
+	array = user_data->array;
+	env = user_data->env;
+	map = user_data->map;
+	f = (struct _field*)p;
+	pbc_type = _pbcP_type(f, &type_name);
+// 	fprintf(file, "field: name=%s, index=%d, pbc_type=%d\n", f->name, f->index, pbc_type);
+// 	fflush(file);
+	key_term1 = enif_make_string(env, f->name, ERL_NIF_LATIN1);
+	int index = f->index;
+	if (pbc_type & PBC_REPEATED)
+	{
+		array[index] = enif_make_list(env, 0);
+		enif_make_map_put(env, map, key_term1, array[index], &map);
+	}
+	else if (pbc_type == PBC_MESSAGE)
+	{
+		struct _message* m1 = _pbcP_get_message(get_pbc_env(), type_name);
+		key_term2 = enif_make_string(env, m1->key, ERL_NIF_LATIN1);
+		get_default_map(env, type_name, &map1);
+		if (!get_default_record(env, type_name, &record))
+		{
+			make_default_term(env, m1, &record, &map1);
+			enif_make_map_put(env, default_records, key_term2, record, &default_records);
+			enif_make_map_put(env, default_maps, key_term2, map1, &default_maps);
+		}
+		array[index] = record;
+		enif_make_map_put(env, map, key_term1, map1, &map);
+	}
+	else
+	{
+		pbc_var defv;
+		union pbc_value* pbc_v;
+		*defv = *(f->default_v);
+		pbc_v = (union pbc_value*)defv;
+		_read(env, pbc_type, type_name, pbc_v, &array[index], decode_type_record);
+		enif_make_map_put(env, map, key_term1, array[index], &map);
+	}
+	user_data->map = map;
+}
+
+int make_default_term(ErlNifEnv* env, struct _message* m, ERL_NIF_TERM* default_record, ERL_NIF_TERM* default_map)
+{
+	struct decode_env user_data;
+	char key_tmp[100];
     int i;
 	int array_size;
 	int field_count = pbc_erl_field_count(m);
 // 	fprintf(file, "make_default_term, type_name: %s, field_count: %d\n", m->key, field_count);
 // 	fflush(file);
 	array_size = field_count + 1;
-	array = enif_alloc(sizeof(ERL_NIF_TERM)* array_size);
+	user_data.array = enif_alloc(sizeof(ERL_NIF_TERM)* array_size);
 	for (i = 0; i < array_size; i++)
 	{
-		array[i] = ATOM_UNDEFINED;
+		user_data.array[i] = ATOM_UNDEFINED;
 	}
-	array[0] = enif_make_atom(env, m->key);
-	map = enif_make_new_map(env);
-	for (i = 1; i < array_size; i++)
+	for (i = strlen(m->key) - 1; i >= 0; --i)
 	{
-		const char *key = NULL;
-		const char *type_name = NULL;
-		int pbc_type = pbc_erl_pbc_type_ip(m, i, &key, &type_name);
-		if (pbc_type < 0) continue;
-		//fprintf(file, "pbc_type: %d, id: %d, key: %s\n", pbc_type, i, key);
-		//fflush(file);
-		key_term1 = enif_make_string(env, key, ERL_NIF_LATIN1);
-		if (pbc_type & PBC_REPEATED)
-		{
-			array[i] = enif_make_list(env, 0);
-			enif_make_map_put(env, map, key_term1, array[i], &map);
-		}
-		else if (pbc_type == PBC_MESSAGE)
-		{
-			struct _message* m1 = _pbcP_get_message(get_pbc_env(), type_name);
-			key_term2 = enif_make_string(env, m1->key, ERL_NIF_LATIN1);
-			get_default_map(env, type_name, &map1);
-			if (!get_default_record(env, type_name, &record))
-			{
-				make_default_term(env, m1, &record, &map1);
-				enif_make_map_put(env, default_records, key_term2, record, &default_records);
-				enif_make_map_put(env, default_maps, key_term2, map1, &default_maps);
-			}
-			array[i] = record;
-			enif_make_map_put(env, map, key_term1, map1, &map);
-		}
-		else
-		{
-			pbc_var defv;
-			union pbc_value* pbc_v;
-			_pbcP_message_default(m, key, defv);
-			pbc_v = (union pbc_value*)defv;
-			_read(env, pbc_type, type_name, pbc_v, &array[i], decode_type_record);
-			enif_make_map_put(env, map, key_term1, array[i], &map);
-		}
+		if (m->key[i] == '.')
+			break;
 	}
-	record = enif_make_tuple_from_array(env, array, array_size);
-	*default_record = record;
-	*default_map = map;
-	enif_free(array);
+	strcpy((char*)key_tmp, m->key + i + 1);
+	user_data.array[0] = enif_make_atom(env, key_tmp);
+	user_data.env = env,
+	user_data.map = enif_make_new_map(env);
+	user_data.arity = array_size;
+
+	_pbcM_sp_foreach_ud(m->name, iterator_msg_field_cb, &user_data);
+	*default_record = enif_make_tuple_from_array(env, user_data.array, array_size);
+	*default_map = user_data.map;
+	enif_free(user_data.array);
 	return 1;
 }
 
@@ -228,7 +256,7 @@ int init_default(ErlNifEnv* env)
 	default_records = enif_make_new_map(env);
 	default_maps = enif_make_new_map(env);
 	//fprintf(file, "ppbc_env: %d\n", ppbc_env);
-	fflush(file);
+	//fflush(file);
 	_pbcM_sp_foreach_ud(ppbc_env->msgs, iterator_msgs_cb, env);
 	ErlNifEnv* env_priv = enif_priv_data(env);
 	enif_clear_env(env_priv);

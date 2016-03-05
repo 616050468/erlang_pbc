@@ -192,7 +192,7 @@ _register_message(struct pbc_env *p, struct _stringpool *pool, struct pbc_rmessa
 		int field_name_sz;
 		const char * field_name = pbc_rmessage_string(field, "name", 0 , &field_name_sz);
 		f.name = _pbcS_build(pool,field_name,field_name_sz);
-
+		f.index = i + 1;
 		_register_field(field, &f , pool);
 
 		_pbcP_push_message(p, temp , &f , queue);

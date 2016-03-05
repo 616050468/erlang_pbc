@@ -1,11 +1,11 @@
 #include "proto.h"
 #include "pbc_erl.h"
 int
-pbc_erl_pbc_type_ip(struct _message *m, int id, const char **key, const char ** type) {
+pbc_erl_pbc_type_index(struct _message *m, int index, const char **key, const char ** type) {
 	if (m == NULL) {
 		return 0;
 	}
-	struct _field * field = (struct _field *)_pbcM_ip_query(m->id, id);
+	struct _field * field = (struct _field *) m->index[index-1];
 	if (field == NULL)
 	{
 		return PBC_NOEXIST;

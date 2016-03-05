@@ -40,8 +40,18 @@ int _write_uint(ErlNifEnv* env, void* wmsg, const char *key, ERL_NIF_TERM value)
 // float, double
 int _write_real(ErlNifEnv* env, void* wmsg, const char *key, ERL_NIF_TERM value)
 {
-	double number;
-	enif_get_double(env, value, &number);
+	double number = (double)0;
+	int n;
+	if (enif_get_double(env, value, &number))
+	{
+	}
+	else
+	{
+		if (enif_get_int(env, value, &n))
+		{
+			number = (double)n;
+		}
+	}
 	return pbc_wmessage_real(wmsg, key, number);
 }
 
@@ -150,7 +160,7 @@ int write_field_index(ErlNifEnv* env, void *wmsg, struct _message *m, int index,
 	const char *key;
 	const char *type;
 	int ret;
-	int pbc_type = pbc_erl_pbc_type_ip(m, index, &key, &type);
+	int pbc_type = pbc_erl_pbc_type_index(m, index, &key, &type);
 	if (pbc_type == PBC_NOEXIST)
 	{
 		((struct pbc_env*)get_pbc_env())->lasterror = "index not found";

@@ -3,8 +3,6 @@
 #include <string.h>
 #include <assert.h>
 
-//__declspec(thread) static struct pbc_env* ppbc_env = NULL;
-//static struct pbc_env* ppbc_env = NULL;
 FILE* file;
 ERL_NIF_TERM default_records = 0;
 ERL_NIF_TERM default_maps = 0;
@@ -74,7 +72,7 @@ ERL_NIF_TERM nif_encode(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 	pbc_wmessage_buffer(wmsg, &slice);
 	ErlNifBinary bin;
 	enif_alloc_binary(slice.len, &bin);
-	strncpy(bin.data, slice.buffer, slice.len);
+	memcpy(bin.data, slice.buffer, slice.len);
 	result = enif_make_binary(env, &bin);
 	pbc_wmessage_delete(wmsg);
 	return result;
@@ -167,7 +165,7 @@ static int on_load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info)
 	ATOM_TRUE = enif_make_atom(env, "true");
 	ATOM_FALSE = enif_make_atom(env, "false");
 	ATOM_UNDEFINED = enif_make_atom(env, "undefined");
-	file = fopen("pbc_nif_log.txt", "w+");
+	//file = fopen("pbc_nif_log.txt", "w+");
     init_thread_local();
 	return 0;
 }

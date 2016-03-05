@@ -28,22 +28,22 @@ call_unknown(pbc_decoder f, void * ud, int id, struct atom *a, uint8_t * start) 
 	case WT_VARINT:
 		v.i.low = a->v.i.low;
 		v.i.hi = a->v.i.hi;
-		f(ud, PBC_INT, TYPENAME[PBC_INT], &v, id , NULL);
+		f(ud, PBC_INT, TYPENAME[PBC_INT], &v, id , 0, NULL);
 		break;
 	case WT_BIT64:
 		v.i.low = a->v.i.low;
 		v.i.hi = a->v.i.hi;
-		f(ud, PBC_FIXED64, TYPENAME[PBC_FIXED64], &v, id , NULL);
+		f(ud, PBC_FIXED64, TYPENAME[PBC_FIXED64], &v, id , 0, NULL);
 		break;
 	case WT_LEND:
 		v.s.buffer = (char*)start + a->v.s.start;
 		v.s.len = a->v.s.end - a->v.s.start;
-		f(ud, PBC_BYTES, TYPENAME[PBC_BYTES], &v, id , NULL);
+		f(ud, PBC_BYTES, TYPENAME[PBC_BYTES], &v, id ,0, NULL);
 		break;
 	case WT_BIT32:
 		v.i.low = a->v.i.low;
 		v.i.hi = 0;
-		f(ud, PBC_FIXED32, TYPENAME[PBC_FIXED32], &v, id , NULL);
+		f(ud, PBC_FIXED32, TYPENAME[PBC_FIXED32], &v, id ,0, NULL);
 		break;
 	default:
 		return 1;
@@ -122,7 +122,7 @@ call_type(pbc_decoder pd, void * ud, struct _field *f, struct atom *a, uint8_t *
 		assert(0);
 		break;
 	}
-	pd(ud, type, type_name, &v, f->id, f->name);
+	pd(ud, type, type_name, &v, f->id, f->index, f->name);
 	return 0;
 }
 
@@ -156,7 +156,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 					(uint64_t)buffer[i+6] << 48 |
 					(uint64_t)buffer[i+7] << 56;
 				v.f = u.d;
-				pd(ud, type , type_name, &v, f->id, f->name);
+				pd(ud, type, type_name, &v, f->id, f->index, f->name);
 			}
 			return size/8;
 		case PTYPE_FLOAT:
@@ -172,7 +172,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 					(uint32_t)buffer[i+2] << 16 |
 					(uint32_t)buffer[i+3] << 24;
 				v.f = (double)u.f;
-				pd(ud, type , type_name, &v, f->id, f->name);
+				pd(ud, type , type_name, &v, f->id, f->index, f->name);
 			}
 			return size/4;
 		case PTYPE_FIXED32:
@@ -184,7 +184,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 					(uint32_t)buffer[i+1] << 8 |
 					(uint32_t)buffer[i+2] << 16 |
 					(uint32_t)buffer[i+3] << 24;
-				pd(ud, type , type_name, &v, f->id, f->name);
+				pd(ud, type , type_name, &v, f->id, f->index, f->name);
 			}
 			return size/4;
 		case PTYPE_FIXED64:
@@ -200,7 +200,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 					(uint32_t)buffer[i+5] << 8 |
 					(uint32_t)buffer[i+6] << 16 |
 					(uint32_t)buffer[i+7] << 24;
-				pd(ud, type , type_name, &v, f->id, f->name);
+				pd(ud, type , type_name, &v, f->id, f->index, f->name);
 			}
 			return size/8;
 		case PTYPE_INT64:
@@ -220,7 +220,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 					if (len > size)
 						return -1;
 				}
-				pd(ud, type , type_name, &v, f->id, f->name);
+				pd(ud, type , type_name, &v, f->id,f->index, f->name);
 				buffer += len;
 				size -= len;
 				++n;
@@ -242,7 +242,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 				}
 				v.e.id = v.i.low;
 				v.e.name = (const char *)_pbcM_ip_query(f->type_name.e->id , v.i.low);
-				pd(ud, type , type_name, &v, f->id, f->name);
+				pd(ud, type , type_name, &v, f->id, f->index, f->name);
 				buffer += len;
 				size -= len;
 				++n;
@@ -264,7 +264,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 						return -1;
 					_pbcV_dezigzag32((struct longlong *)&(v.i));
 				}
-				pd(ud, type , type_name, &v, f->id, f->name);
+				pd(ud, type , type_name, &v, f->id,f->index, f->name);
 				buffer += len;
 				size -= len;
 				++n;
@@ -286,7 +286,7 @@ call_array(pbc_decoder pd, void * ud, struct _field *f, uint8_t * buffer , int s
 						return -1;
 					_pbcV_dezigzag64((struct longlong *)&(v.i));
 				}
-				pd(ud, type , type_name, &v, f->id, f->name);
+				pd(ud, type , type_name, &v, f->id, f->index, f->name);
 				buffer += len;
 				size -= len;
 				++n;

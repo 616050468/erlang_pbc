@@ -131,6 +131,17 @@ _set_table(void *p, void *ud) {
 	++iter->count;
 }
 
+static void
+_set_index(void *p, void *ud) {
+	struct _field * field = (struct _field *)p;
+	struct _message * m = (struct _message *)ud;
+	if (field->index < 0 || field->index > 125)
+	{
+		return;
+	}
+	m->index[field->index-1] = field;
+}
+
 struct _message * 
 _pbcP_init_message(struct pbc_env * p, const char *name) {
 	struct _message * m = (struct _message *)_pbcM_sp_query(p->msgs, name);
@@ -154,7 +165,7 @@ _pbcP_init_message(struct pbc_env * p, const char *name) {
 	iter.table = (struct map_kv *)malloc(iter.count * sizeof(struct map_kv));
 	iter.count = 0;
 	_pbcM_sp_foreach_ud(m->name, _set_table, &iter);
-
+	_pbcM_sp_foreach_ud(m->name, _set_index, m);
 	m->id = _pbcM_ip_new(iter.table , iter.count);
 
 	free(iter.table);

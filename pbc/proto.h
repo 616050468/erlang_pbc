@@ -22,6 +22,7 @@ struct _enum;
 
 struct _field {
 	int id;
+	int index;
 	const char *name;
 	int type;
 	int label;
@@ -35,6 +36,7 @@ struct _field {
 
 struct _message {
 	const char * key;
+	void * index[125]; // index -> _field
 	struct map_ip * id;	// id -> _field
 	struct map_sp * name;	// string -> _field
 	struct pbc_rmessage * def;	// default message
