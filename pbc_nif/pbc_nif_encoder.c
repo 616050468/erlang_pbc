@@ -215,7 +215,7 @@ int encode_message(ErlNifEnv* env, void *wmsg, const char *type_name, ERL_NIF_TE
 // 		fflush(file);
 		for (i = 1; i < len; ++i)
 		{
-			if (enif_compare(value, ATOM_UNDEFINED) == 0)
+			if (enif_compare(array[i], ATOM_UNDEFINED) == 0)
 				continue;
 			ret = write_field_index(env, wmsg, m, i, array[i]);
 			if (ret < 0) return ret;
