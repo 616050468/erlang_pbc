@@ -22,7 +22,6 @@ struct _enum;
 
 struct _field {
 	int id;
-	int index;
 	const char *name;
 	int type;
 	int label;
@@ -32,6 +31,7 @@ struct _field {
 		struct _message * m;
 		struct _enum * e;
 	} type_name;
+	int index;
 };
 
 struct _message {

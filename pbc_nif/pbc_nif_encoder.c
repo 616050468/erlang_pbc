@@ -10,7 +10,7 @@ extern FILE* file;
 // int32, sint32
 int _write_int32(ErlNifEnv* env, void* wmsg, const char *key, ERL_NIF_TERM value)
 {
-	int number;
+	int number = 0;
 	enif_get_int(env, value, &number);
 	uint32_t hi = 0;
 	if (number < 0)
@@ -21,7 +21,7 @@ int _write_int32(ErlNifEnv* env, void* wmsg, const char *key, ERL_NIF_TERM value
 // int64, sint64
 int _write_int64(ErlNifEnv* env, void* wmsg, const char *key, ERL_NIF_TERM value)
 {
-	ErlNifSInt64 number;
+	ErlNifSInt64 number = 0;
 	enif_get_int64(env, value, &number);
 	uint32_t hi = (uint32_t)(number >> 32);
 	return pbc_wmessage_integer(wmsg, key, (uint32_t)number, hi);
@@ -30,7 +30,7 @@ int _write_int64(ErlNifEnv* env, void* wmsg, const char *key, ERL_NIF_TERM value
 // uint32, uint64
 int _write_uint(ErlNifEnv* env, void* wmsg, const char *key, ERL_NIF_TERM value)
 {
-	ErlNifUInt64 v;
+	ErlNifUInt64 v = 0;
 	enif_get_uint64(env, value, &v);
 	uint64_t number = (uint64_t)v;
 	uint32_t hi = (uint32_t)(number >> 32);
@@ -83,11 +83,10 @@ int _write_bool(ErlNifEnv* env, void* wmsg, const char *key, ERL_NIF_TERM value)
 
 int _write_string(ErlNifEnv* env, void* wmsg, const char *key, ERL_NIF_TERM value)
 {
-	char buf[1024];
 	ErlNifBinary bin;
-	if (enif_is_list(env, value) && enif_get_string(env, value, buf, sizeof(buf), ERL_NIF_LATIN1))
+	if (enif_is_list(env, value) && enif_inspect_iolist_as_binary(env, value, &bin))
 	{
-		return pbc_wmessage_string(wmsg, key, buf, strlen(buf));
+		return pbc_wmessage_string(wmsg, key, bin.data, bin.size);
 	}
 	else if (enif_is_binary(env, value) && enif_inspect_binary(env, value, &bin))
 	{
@@ -199,7 +198,6 @@ int write_field(ErlNifEnv* env, void *wmsg, struct _message *m, const char *key,
 	{
 		ret = _write(env, wmsg, key, pbc_type, value, type);
 	}
-
 	return ret;
 }
 

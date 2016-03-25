@@ -127,14 +127,14 @@ int decode_message(ErlNifEnv* env, const char* type_name, struct pbc_slice* slic
 	user_data.decode_type = decode_type;
 	ERL_NIF_TERM term;
 	int ret;
-	if (decode_type == decode_type_record && get_default_record(enif_priv_data(env), type_name, &term))
+	if (decode_type == decode_type_record && get_default_record(env, type_name, &term))
 	{
 		ERL_NIF_TERM record = enif_make_copy(env, term);
 		enif_get_tuple(env, record, &user_data.arity, (const ERL_NIF_TERM **)&user_data.array);
 		ret = pbc_decode(get_pbc_env(), type_name, slice, decode_cb, &user_data);
 		*result = enif_make_tuple_from_array(env, user_data.array, user_data.arity);
 	}
-	else if (decode_type == decode_type_map && get_default_map(enif_priv_data(env), type_name, &term))
+	else if (decode_type == decode_type_map && get_default_map(env, type_name, &term))
 	{
 		user_data.map = enif_make_copy(env, term);
 		ret = pbc_decode(get_pbc_env(), type_name, slice, decode_cb, &user_data);
@@ -176,6 +176,10 @@ void iterator_msg_field_cb(void *p, void *ud)
 	else if (pbc_type == PBC_MESSAGE)
 	{
 		struct _message* m1 = _pbcP_get_message(get_pbc_env(), type_name);
+		if (m1 == NULL)
+		{
+			return;
+		}
 		key_term2 = enif_make_string(env, m1->key, ERL_NIF_LATIN1);
 		get_default_map(env, type_name, &map1);
 		if (!get_default_record(env, type_name, &record))
