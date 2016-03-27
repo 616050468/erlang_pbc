@@ -41,13 +41,13 @@ int _write_uint(ErlNifEnv* env, void* wmsg, const char *key, ERL_NIF_TERM value)
 int _write_real(ErlNifEnv* env, void* wmsg, const char *key, ERL_NIF_TERM value)
 {
 	double number = (double)0;
-	int n;
+	ErlNifSInt64 n = 0;
 	if (enif_get_double(env, value, &number))
 	{
 	}
 	else
 	{
-		if (enif_get_int(env, value, &n))
+		if (enif_get_int64(env, value, &n))
 		{
 			number = (double)n;
 		}
@@ -84,15 +84,13 @@ int _write_bool(ErlNifEnv* env, void* wmsg, const char *key, ERL_NIF_TERM value)
 int _write_string(ErlNifEnv* env, void* wmsg, const char *key, ERL_NIF_TERM value)
 {
 	ErlNifBinary bin;
-	if (enif_is_list(env, value) && enif_inspect_iolist_as_binary(env, value, &bin))
+	int ret = 0;
+	if (enif_inspect_iolist_as_binary(env, value, &bin))
 	{
-		return pbc_wmessage_string(wmsg, key, bin.data, bin.size);
+		if (bin.size > 0)
+			ret = pbc_wmessage_string(wmsg, key, bin.data, bin.size);
 	}
-	else if (enif_is_binary(env, value) && enif_inspect_binary(env, value, &bin))
-	{
-		return pbc_wmessage_string(wmsg, key, bin.data, bin.size);
-	}
-	return 0;
+	return ret;
 }
 
 int _write_message(ErlNifEnv* env, void* wmsg, const char *key, ERL_NIF_TERM value, const char *type_name)
